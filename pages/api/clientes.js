@@ -5,31 +5,36 @@ export default async function handler(req, res) {
   const db = client.db("prestamos_pro");
   const col = db.collection("clientes");
 
-  if (req.method === "GET") {
-    const clientes = await col.find().toArray();
-    return res.status(200).json(clientes);
-  }
+  try {
+    if (req.method === "GET") {
+      const clientes = await col.find().toArray();
+      return res.status(200).json(clientes); // siempre devuelve array
+    }
 
-  if (req.method === "POST") {
-    try {
+    if (req.method === "POST") {
       const body = JSON.parse(req.body);
 
-      const nuevo = {
+      if (!body.nombre || !body.telefono) {
+        return res.status(400).json({ error: "Faltan campos requeridos" });
+      }
+
+      const nuevoCliente = {
         nombre: body.nombre,
         telefono: body.telefono,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
-      await col.insertOne(nuevo);
+      await col.insertOne(nuevoCliente);
 
       // Devuelve la lista actualizada de clientes
       const clientes = await col.find().toArray();
       return res.status(200).json(clientes);
-    } catch (e) {
-      console.error(e);
-      return res.status(500).json({ error: "Error creando cliente" });
     }
-  }
 
-  return res.status(405).end();
+    // Si llega otro método, no permitido
+    return res.status(405).json({ error: "Método no permitido" });
+  } catch (error) {
+    console.error("Error en /api/clientes:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
 }
