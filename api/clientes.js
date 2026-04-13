@@ -1,25 +1,23 @@
-let clientes = [];
+import { db } from "../lib/mongo";
 
-export default function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+export default async function handler(req, res) {
+  const database = await db();
+  const col = database.collection("clientes");
 
   if (req.method === "GET") {
-    return res.json(clientes);
+    return res.json(await col.find().toArray());
   }
 
   if (req.method === "POST") {
-    const body = JSON.parse(req.body || "{}");
+    const body = JSON.parse(req.body);
 
-    const nuevo = {
-      id: Date.now().toString(),
+    const cliente = {
       nombre: body.nombre,
-      telefono: body.telefono
+      telefono: body.telefono,
+      createdAt: new Date()
     };
 
-    clientes.push(nuevo);
-
-    return res.json(nuevo);
+    const r = await col.insertOne(cliente);
+    return res.json(r);
   }
-
-  res.status(405).end();
 }
