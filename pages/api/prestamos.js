@@ -21,9 +21,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "POST") {
-      const body = JSON.parse(req.body);
-
-      // Validación básica
+      const body = req.body;
       if (!body.clienteId || !body.monto) {
         return res.status(400).json({ error: "Faltan campos requeridos" });
       }
@@ -31,25 +29,21 @@ export default async function handler(req, res) {
       const monto = Number(body.monto);
       const meses = Number(body.meses) || 6;
 
-      const prestamo = {
+      await col.insertOne({
         clienteId: body.clienteId,
         monto,
         meses,
         cuotas: generarCuotas(monto, meses),
         createdAt: new Date(),
-      };
+      });
 
-      await col.insertOne(prestamo);
-
-      // Devuelve la lista actualizada de préstamos
       const prestamos = await col.find().toArray();
       return res.status(200).json(prestamos);
     }
 
-    // Método no permitido
     return res.status(405).json({ error: "Método no permitido" });
   } catch (error) {
-    console.error("Error en /api/prestamos:", error);
+    console.error(error);
     return res.status(500).json({ error: "Error interno del servidor" });
   }
 }
