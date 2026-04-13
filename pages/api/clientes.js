@@ -20,9 +20,13 @@ export default async function handler(req, res) {
         createdAt: new Date()
       };
 
-      const result = await col.insertOne(nuevo);
-      return res.status(200).json(result);
+      await col.insertOne(nuevo);
+
+      // Devuelve la lista actualizada de clientes
+      const clientes = await col.find().toArray();
+      return res.status(200).json(clientes);
     } catch (e) {
+      console.error(e);
       return res.status(500).json({ error: "Error creando cliente" });
     }
   }

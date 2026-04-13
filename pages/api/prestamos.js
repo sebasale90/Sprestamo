@@ -6,7 +6,7 @@ function generarCuotas(monto, meses) {
   return Array.from({ length: meses }).map((_, i) => ({
     numero: i + 1,
     monto: cuota,
-    estado: "pendiente"
+    estado: "pendiente",
   }));
 }
 
@@ -32,12 +32,16 @@ export default async function handler(req, res) {
         monto,
         meses,
         cuotas: generarCuotas(monto, meses),
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
-      const result = await col.insertOne(prestamo);
-      return res.status(200).json(result);
+      await col.insertOne(prestamo);
+
+      // Devuelve la lista actualizada de préstamos
+      const prestamos = await col.find().toArray();
+      return res.status(200).json(prestamos);
     } catch (e) {
+      console.error(e);
       return res.status(500).json({ error: "Error creando préstamo" });
     }
   }
