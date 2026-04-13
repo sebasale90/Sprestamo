@@ -1,5 +1,59 @@
 const e = React.createElement;
 
+/* ====== ESTILOS ====== */
+const styles = {
+  header: {
+    fontSize: "28px",
+    fontWeight: "700",
+    marginBottom: "20px"
+  },
+
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "20px"
+  },
+
+  card: {
+    background: "#111a2e",
+    padding: "20px",
+    borderRadius: "14px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+    border: "1px solid rgba(255,255,255,0.05)"
+  },
+
+  input: {
+    width: "100%",
+    padding: "12px",
+    margin: "6px 0",
+    borderRadius: "10px",
+    border: "1px solid rgba(255,255,255,0.1)",
+    background: "#0b1220",
+    color: "#fff"
+  },
+
+  button: {
+    padding: "10px 14px",
+    borderRadius: "10px",
+    border: "none",
+    cursor: "pointer",
+    background: "linear-gradient(135deg,#4f8cff,#6f6bff)",
+    color: "white",
+    fontWeight: "600",
+    marginTop: "10px"
+  },
+
+  item: {
+    padding: "10px",
+    borderBottom: "1px solid rgba(255,255,255,0.05)"
+  },
+
+  tag: {
+    fontSize: "12px",
+    opacity: 0.7
+  }
+};
+
 function App() {
   const [clientes, setClientes] = React.useState([]);
   const [prestamos, setPrestamos] = React.useState([]);
@@ -10,102 +64,100 @@ function App() {
   const [clienteId, setClienteId] = React.useState("");
   const [monto, setMonto] = React.useState("");
 
-  // Cargar todo
   React.useEffect(() => {
-    cargarClientes();
-    cargarPrestamos();
+    fetch("/api/clientes").then(r => r.json()).then(setClientes);
+    fetch("/api/prestamos").then(r => r.json()).then(setPrestamos);
   }, []);
-
-  function cargarClientes() {
-    fetch("/api/clientes")
-      .then(r => r.json())
-      .then(setClientes)
-      .catch(err => console.log("error clientes", err));
-  }
-
-  function cargarPrestamos() {
-    fetch("/api/prestamos")
-      .then(r => r.json())
-      .then(setPrestamos)
-      .catch(err => console.log("error prestamos", err));
-  }
 
   function crearCliente() {
     fetch("/api/clientes", {
       method: "POST",
       body: JSON.stringify({ nombre, telefono })
-    }).then(() => {
-      setNombre("");
-      setTelefono("");
-      cargarClientes();
-    });
+    }).then(() => location.reload());
   }
 
   function crearPrestamo() {
     fetch("/api/prestamos", {
       method: "POST",
       body: JSON.stringify({ clienteId, monto })
-    }).then(() => {
-      setMonto("");
-      cargarPrestamos();
-    });
+    }).then(() => location.reload());
   }
 
-  return e("div", { style: { fontFamily: "Arial", padding: 20 } },
+  return e("div", { className: "container" },
 
-    e("h1", null, "🏦 Sistema de Préstamos PRO"),
+    e("div", { style: styles.header }, "🏦 Préstamos Pro"),
 
-    // ================= CLIENTES =================
-    e("h2", null, "👤 Clientes"),
+    e("div", { style: styles.grid },
 
-    e("input", {
-      placeholder: "Nombre",
-      value: nombre,
-      onChange: ev => setNombre(ev.target.value)
-    }),
+      /* ===== CLIENTES ===== */
+      e("div", { style: styles.card },
 
-    e("input", {
-      placeholder: "Teléfono",
-      value: telefono,
-      onChange: ev => setTelefono(ev.target.value)
-    }),
+        e("h3", null, "👤 Clientes"),
 
-    e("button", { onClick: crearCliente }, "Crear cliente"),
+        e("input", {
+          style: styles.input,
+          placeholder: "Nombre",
+          value: nombre,
+          onChange: e => setNombre(e.target.value)
+        }),
 
-    clientes.length === 0
-      ? e("p", null, "No hay clientes")
-      : clientes.map(c =>
-          e("div", { key: c.id }, `👤 ${c.nombre} - ${c.telefono}`)
-        ),
+        e("input", {
+          style: styles.input,
+          placeholder: "Teléfono",
+          value: telefono,
+          onChange: e => setTelefono(e.target.value)
+        }),
 
-    // ================= PRÉSTAMOS =================
-    e("h2", null, "💰 Préstamos"),
+        e("button", { style: styles.button, onClick: crearCliente }, "Crear cliente"),
 
-    e("select", {
-      value: clienteId,
-      onChange: ev => setClienteId(ev.target.value)
-    },
-      e("option", null, "Seleccionar cliente"),
-      clientes.map(c =>
-        e("option", { value: c.id }, c.nombre)
-      )
-    ),
-
-    e("input", {
-      placeholder: "Monto",
-      value: monto,
-      onChange: ev => setMonto(ev.target.value)
-    }),
-
-    e("button", { onClick: crearPrestamo }, "Crear préstamo"),
-
-    prestamos.length === 0
-      ? e("p", null, "No hay préstamos")
-      : prestamos.map(p =>
-          e("div", { key: p.id },
-            `💰 Cliente: ${p.clienteId} | $${p.monto}`
+        e("div", null,
+          clientes.map(c =>
+            e("div", { style: styles.item, key: c.id },
+              e("div", null, "👤 " + c.nombre),
+              e("div", { style: styles.tag }, c.telefono)
+            )
           )
         )
+      ),
+
+      /* ===== PRÉSTAMOS ===== */
+      e("div", { style: styles.card },
+
+        e("h3", null, "💰 Préstamos"),
+
+        e("select", {
+          style: styles.input,
+          value: clienteId,
+          onChange: e => setClienteId(e.target.value)
+        },
+
+          e("option", null, "Seleccionar cliente"),
+
+          clientes.map(c =>
+            e("option", { value: c.id }, c.nombre)
+          )
+        ),
+
+        e("input", {
+          style: styles.input,
+          placeholder: "Monto",
+          value: monto,
+          onChange: e => setMonto(e.target.value)
+        }),
+
+        e("button", { style: styles.button, onClick: crearPrestamo }, "Crear préstamo"),
+
+        e("div", null,
+          prestamos.map(p =>
+            e("div", { style: styles.item, key: p.id },
+              "💰 $" + p.monto,
+              e("div", { style: styles.tag }, "Cliente ID: " + p.clienteId)
+            )
+          )
+        )
+      )
+
+    )
   );
 }
 
